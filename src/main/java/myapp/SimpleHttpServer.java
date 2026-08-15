@@ -12,8 +12,11 @@ public class SimpleHttpServer {
   public static void main(String[] args) {
     final int port = 8080;
     try (ServerSocket serversocket = new ServerSocket(port);) {
-      Socket socket = serversocket.accept();
-      handleRequest(socket);
+      while (true) {
+
+        Socket socket = serversocket.accept();
+        handleRequest(socket);
+      }
     } catch (IOException e) {
       System.out.println("Failed to socket: " + e.getMessage());
     }
@@ -29,10 +32,27 @@ public class SimpleHttpServer {
       String requestMethod = parts[0];
       String path = parts[1];
       if ("GET".equalsIgnoreCase(requestMethod) && "/message".equalsIgnoreCase(path)) {
-
+        writeResponse(outputStream);
       }
     } catch (IOException e) {
       System.out.println("Failed to handle request: " + e.getMessage());
+    } finally {
+      try {
+        socket.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
+  }
+
+  private static void writeResponse(OutputStream outputStream) throws IOException {
+    String message = "test message yipee";
+    String httpResponse = """
+        HTTP/1.1 200 OK
+        Content-Type: text/plain
+        Content-length: """ + message.length() + "\n\n" + message;
+    outputStream.write(httpResponse.getBytes());
+    outputStream.flush();
+    outputStream.close();
   }
 }
